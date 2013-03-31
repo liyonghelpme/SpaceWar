@@ -3,8 +3,11 @@
 #include "Lightning.h"
 #include "Bomb.h"
 #include "Cannon.h"
-#include "Background.h"
-//#include "Range.h"
+#include "SpaceBack.h"
+#include "Ship.h"
+#include "stdlib.h"
+#include "Number.h"
+#include "Arrow.h"
 
 USING_NS_CC;
 
@@ -23,16 +26,65 @@ CCScene* HelloWorld::scene()
     // return the scene
     return scene;
 }
+void HelloWorld::randomPlanet() {
+    for(int i = 0; i < 5; ){
+        float x = random()%100000/100000.*(800-60)+30;
+        float y = random()%100000/100000.*(480-60)+30;
+        bool tooClose = false;
+        CCLog("find position %f %f", x, y);
+        for(unsigned int j = 0; j < planets->count(); j++) {
+            Planet *neibor = (Planet*)planets->objectAtIndex(j);
+            CCPoint p = neibor->getPosition();
+            if(sqrt((p.x-x)*(p.x-x)+(p.y-y)*(p.y-y)) <= 100) {
+                tooClose = true;
+                break;
+            }
+        }
+        if(!tooClose) {
+            Planet *p = Planet::create();
+            planets->addObject(p);
+            addChild(p);
+            p->setPosition(x, y);
+            if(i == 0)
+                p->setColor(0);
+            else
+                p->setColor(2);
+            p->logic = this;
+
+
+            p = Planet::create();
+            planets->addObject(p);
+            addChild(p);
+            p->setPosition(-x+800, -y+480);
+            if(i == 0)
+                p->setColor(1);
+            else
+                p->setColor(2);
+            p->logic = this;
+            i++;
+        }
+    }
+}
 
 // on "init" you need to initialize your instance
 bool HelloWorld::init()
 {
+    CCLog("initHello world");
     //////////////////////////////
     // 1. super init first
     if ( !CCLayer::init() )
     {
         return false;
     }
+    state = 0;
+
+    planets = new CCArray();
+    ships = new CCArray();
+
+    setTouchEnabled(true);
+    setTouchPriority(1);
+    setTouchMode(kCCTouchesOneByOne);
+    holdTime = 1;
 
     //resourceSize / designSize
     CCDirector::sharedDirector()->setContentScaleFactor(1.0);
@@ -53,66 +105,18 @@ bool HelloWorld::init()
     
     Lightning *lightning = Lightning::create(NULL, 100, 10.0, 10.0, 20.0);
     lightning->midDisplacement(0, 160, 480, 160, 100.0);
-    //lightning->testLine(300 ,400, 50, 200);
-    //lightning->testLine(50 ,200, 300, 400);
     this->addChild(lightning);
-    //lightning->runAction(CCFadeOut::create(2));
 
-    //Layer3d *layer3d = Layer3d::create();
-    //this->addChild(layer3d);
-    //Bomb *bomb = Bomb::create();
-    //addChild(bomb);
+    SpaceBack *sb = SpaceBack::create();
+    addChild(sb);
 
-    Background *bk = Background::create();
-    addChild(bk);
+    randomPlanet();
+
+
+    WelcomeScene *welcome = WelcomeScene::create();
+    welcome->logic = this;
+    addChild(welcome);
     
-    //Cannon *cannon = Cannon::create();
-    //addChild(cannon);
-    //cannon->setPosition(ccp(400, 240));
-
-    //Range *range = Range::create();
-    //addChild(range);
-
-    CCSprite *sp;
-    ccBlendFunc src = {GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA};
-
-    sp = CCSprite::create("range_circle.png");
-    //sp->setScaleY(0.8);
-    sp->setPosition(ccp(50, 50));
-
-    sp->setBlendFunc(src);
-    sp->getTexture()->generateMipmap();
-    ccTexParams texParams = { GL_LINEAR_MIPMAP_LINEAR, GL_NEAREST_MIPMAP_LINEAR, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE };    
-    sp->getTexture()->setTexParameters(&texParams);
-
-    sp->setScale(0.2);
-
-    addChild(sp);
-
-    sp = CCSprite::create("range_circle.png");
-    //sp->setScaleY(0.8);
-    sp->setPosition(ccp(100, 100));
-    sp->setBlendFunc(src);
-    sp->setScale(0.5);
-    addChild(sp);
-
-    sp = CCSprite::create("range_circle.png");
-    //sp->setScaleY(0.8);
-    sp->setPosition(ccp(200, 200));
-    sp->setBlendFunc(src);
-    sp->setScale(1);
-    addChild(sp);
-
-    sp = CCSprite::create("range_circle.png");
-    //sp->setScaleY(0.8);
-    sp->setPosition(ccp(400, 300));
-    sp->setBlendFunc(src);
-    sp->setScale(2);
-    sp->setOpacity(200); //设定alpha 
-
-    addChild(sp);
-
-
     return true;
 }
 
@@ -124,4 +128,120 @@ void HelloWorld::menuCloseCallback(CCObject* pSender)
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
     exit(0);
 #endif
+}
+
+HelloWorld::~HelloWorld() {
+    planets->release();
+}
+
+Planet *HelloWorld::checkInPlanet(CCPoint &pos) {
+    for(unsigned int i = 0; i < planets->count(); i++) {
+        Planet *p = (Planet *)planets->objectAtIndex(i);
+        bool find = p->checkIn(pos.x, pos.y);
+        if(find) {
+            return p;
+        }
+    }
+    return NULL;
+}
+bool HelloWorld::ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent) {
+    CCLog("hello touchBegan");
+
+    startPlanet = NULL;
+    endPlanet = NULL;
+    arrow = NULL;
+    passTime = 0;
+    transferNum = 0;
+
+    CCPoint pos = pTouch->getLocation();
+    startPlanet = checkInPlanet(pos); 
+    if(startPlanet->color != 0)
+        startPlanet = NULL;
+    if(startPlanet != NULL) {
+        transferNum = startPlanet->shipNum/4;
+        transferNum = transferNum > 0 ? transferNum : 1;
+    }
+
+    CCLog("pos is %f %f %x", pos.x, pos.y, startPlanet);
+    return true;
+}
+//show arrow
+void HelloWorld::ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent) {
+    CCPoint tar = pTouch->getLocation();
+    CCLog("move start %f %f", tar.x, tar.y);
+
+    if(startPlanet != NULL) {
+        if(startPlanet->color != 0) {
+            arrow->removeFromParent();
+            startPlanet = NULL;
+            arrow = NULL;
+        } else {
+            endPlanet = checkInPlanet(tar);
+            if(endPlanet != NULL) {
+                tar = endPlanet->getPosition();
+            }
+            CCPoint st = startPlanet->getPosition();
+            kmVec3 a = {st.x, st.y, 0};
+            kmVec3 b = {tar.x, tar.y, 0};
+                
+            if(arrow == NULL) {
+                arrow = Arrow::create();
+                addChild(arrow);
+            }
+
+            CCLog("Move %f %f %f %f %x", a.x, a.y, tar.x, tar.y, arrow);
+            arrow->setStartEnd(a, b);
+        }
+    }
+}
+void HelloWorld::ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent) {
+    if(arrow != NULL) { 
+        arrow->removeFromParent();
+        arrow = NULL;
+    }
+    startPlanet = NULL;
+    endPlanet = NULL;
+}
+
+void HelloWorld::sendShip() {
+    int realTransferNum = transferNum <= startPlanet->shipNum ? transferNum : startPlanet->shipNum;
+    if(realTransferNum > 0) {
+        startPlanet->sendShip(realTransferNum, endPlanet);
+        Ship *ship = Ship::create(); 
+        ship->number = realTransferNum;
+        ship->color = startPlanet->color;
+        ship->startPlanet = startPlanet;
+        ship->endPlanet = endPlanet;
+        ship->logic = this;
+
+        ship->startMove();
+
+        ships->addObject(ship);
+        addChild(ship);
+    }
+}
+void HelloWorld::update(float dt) {
+    if(startPlanet != NULL && endPlanet != NULL) {
+        if(startPlanet->color == 0) {   
+            if(passTime > holdTime) {
+                sendShip();
+                passTime -= holdTime;
+            }
+            passTime += dt;
+        }
+    }
+}
+
+void HelloWorld::onEnter() {
+    CCLayer::onEnter();
+    scheduleUpdate();
+}
+
+void HelloWorld::shipArrive(Ship *ship) {
+    ships->removeObject(ship);
+    ship->endPlanet->shipArrive(ship);
+    ship->removeFromParent();
+}
+void HelloWorld::playNow() {
+    state = 1;
 }

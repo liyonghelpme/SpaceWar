@@ -2,7 +2,14 @@
 #define __HELLOWORLD_SCENE_H__
 
 #include "cocos2d.h"
+#include "Planet.h"
+#include "math.h"
+#include "Arrow.h"
+#include "Ship.h"
+#include "WelcomeScene.h"
 
+class Planet;
+class Ship;
 class HelloWorld : public cocos2d::CCLayer
 {
 public:
@@ -17,6 +24,31 @@ public:
     
     // implement the "static node()" method manually
     CREATE_FUNC(HelloWorld);
+
+    void randomPlanet();
+    ~HelloWorld();
+
+    virtual bool ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent);
+    virtual void ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent);
+    virtual void ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent);
+    virtual void onEnter();
+    virtual void update(float dt);
+    void shipArrive(Ship*);
+    void playNow();
+
+    int state;
+private:
+    CCArray *planets;
+    Planet *startPlanet;
+    Planet *endPlanet;
+
+    Arrow *arrow;
+    Planet *checkInPlanet(CCPoint&);
+    float passTime;
+    int transferNum;
+    int holdTime;
+    CCArray *ships;
+    void sendShip();
 };
 
 #endif // __HELLOWORLD_SCENE_H__

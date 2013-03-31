@@ -19,10 +19,10 @@ class Lightning;
 class Line : public CCSprite
 {
 public:
-    Lightning *lightning;
     kmVec3 a, b;
-    static Line *create(const char *fileName, kmVec3 &a, kmVec3 &b, float thickness, float deg, ccColor3B c, kmVec3 &temp, Lightning *lightning);
+    static Line *create(const char *fileName, kmVec3 &a, kmVec3 &b, float thickness, ccColor3B c);
 };
+void makeLine(const char *fileName, kmVec3 &a, kmVec3 &b, float thickness, ccColor3B &c, CCSpriteBatchNode *parent);
 
 class Lightning : public CCSpriteBatchNode
 {

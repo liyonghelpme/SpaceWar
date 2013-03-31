@@ -30,7 +30,13 @@ OBJECTS = ./main.o \
         ../Classes/Bomb.o \
         ../Classes/Cannon.o \
         ../Classes/Background.o \
-        ../Classes/Range.o
+        ../Classes/Range.o \
+		../Classes/SpaceBack.o \
+		../Classes/Planet.o \
+		../Classes/Ship.o \
+		../Classes/Number.o \
+		../Classes/Arrow.o \
+		../Classes/WelcomeScene.o
 
 LBITS := $(shell getconf LONG_BIT)
 ifeq ($(LBITS),64)

@@ -3,8 +3,38 @@
 #include "cmath"
 #include "kazmath/utility.h"
 
-Line *Line::create(const char *fileName, kmVec3 &a, kmVec3 &b, float thickness, float deg, ccColor3B c, kmVec3 &temp, Lightning *lightning)
+void makeLine(const char *fileName, kmVec3 &a, kmVec3 &b, float thickness, ccColor3B &c, CCSpriteBatchNode *parent) {
+    Line *l = Line::create(fileName, a, b, thickness, c);
+    parent->addChild(l);
+     
+    kmVec3 temp;
+    kmVec3Subtract(&temp, &b, &a);
+    double deg = -atan2(temp.y, temp.x)*180/kmPI;
+
+    CCSprite *s = CCSprite::create(fileName);
+    s->setAnchorPoint(ccp(1.0, 0.5));
+    s->setPosition(ccp(a.x, a.y));
+    s->setRotation(deg);
+    s->setScale(thickness/128);
+    s->setColor(c);
+    parent->addChild(s);
+
+    s = CCSprite::create(fileName);
+    s->setAnchorPoint(ccp(0, 0.5));
+    s->setPosition(ccp(b.x, b.y));
+    s->setRotation(deg);
+    s->setFlipX(true);
+    s->setScale(thickness/128);
+    s->setColor(c);
+    parent->addChild(s);
+}
+
+Line *Line::create(const char *fileName, kmVec3 &a, kmVec3 &b, float thickness, ccColor3B c)
 {
+    kmVec3 temp;
+    kmVec3Subtract(&temp, &b, &a);
+    double deg = -atan2(temp.y, temp.x)*180/kmPI;
+
     Line *line = new Line();
     line->initWithFile(fileName);
     line->setTextureRect(CCRectMake(63, 0, 1, 128));//宽第1的中间像素
@@ -128,7 +158,7 @@ void Lightning::midDisplacement(float x1, float y1, float x2, float y2, float di
         ccColor3B c = {255*.2, 255*.2, 255*.7};
 
 
-        Line *line = Line::create(this->fileName.c_str(), a, b, thickness, deg, c, temp, this);
+        Line *line = Line::create(this->fileName.c_str(), a, b, thickness, c);
         addChild(line);
 
         CCSprite *s = CCSprite::create(fileName.c_str());
