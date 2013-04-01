@@ -34,7 +34,7 @@ public:
     virtual void onEnter();
     virtual void update(float dt);
     void shipArrive(Ship*);
-    void playNow();
+    void playNow(int);
 
     int state;
 private:
@@ -46,9 +46,20 @@ private:
     Planet *checkInPlanet(CCPoint&);
     float passTime;
     int transferNum;
-    int holdTime;
+    float holdTime;
     CCArray *ships;
     void sendShip();
+    void aiSendShip(Planet*, Planet*);
+
+    void failNow();
+    void winNow();
+
+    void think(float);
+
+    float countTime;
+    float thinkTime;
+    float planetRadius;
+    float minPlanetDistance;
 };
 
 #endif // __HELLOWORLD_SCENE_H__

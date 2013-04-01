@@ -8,6 +8,8 @@
 #include "stdlib.h"
 #include "Number.h"
 #include "Arrow.h"
+#include "FailOrWin.h"
+#include "stdlib.h"
 
 USING_NS_CC;
 
@@ -26,22 +28,30 @@ CCScene* HelloWorld::scene()
     // return the scene
     return scene;
 }
+//边缘 和 中心 去除掉
 void HelloWorld::randomPlanet() {
+
     for(int i = 0; i < 5; ){
-        float x = random()%100000/100000.*(800-60)+30;
-        float y = random()%100000/100000.*(480-60)+30;
+        float x = random()%100000/100000.*(400-planetRadius*2)+planetRadius;
+        float y = random()%100000/100000.*(240-planetRadius*2)+planetRadius;
+        int dir = random()%2;
+        if(dir == 1)
+            x = 800-x;
+        dir = random()%2;
+        if(dir == 1)
+            y = 480-y;
         bool tooClose = false;
         CCLog("find position %f %f", x, y);
         for(unsigned int j = 0; j < planets->count(); j++) {
             Planet *neibor = (Planet*)planets->objectAtIndex(j);
             CCPoint p = neibor->getPosition();
-            if(sqrt((p.x-x)*(p.x-x)+(p.y-y)*(p.y-y)) <= 100) {
+            if(sqrt((p.x-x)*(p.x-x)+(p.y-y)*(p.y-y)) <= minPlanetDistance) {
                 tooClose = true;
                 break;
             }
         }
         if(!tooClose) {
-            Planet *p = Planet::create();
+            Planet *p = Planet::create(planetRadius);
             planets->addObject(p);
             addChild(p);
             p->setPosition(x, y);
@@ -52,7 +62,7 @@ void HelloWorld::randomPlanet() {
             p->logic = this;
 
 
-            p = Planet::create();
+            p = Planet::create(planetRadius);
             planets->addObject(p);
             addChild(p);
             p->setPosition(-x+800, -y+480);
@@ -76,7 +86,12 @@ bool HelloWorld::init()
     {
         return false;
     }
+    minPlanetDistance = 150;
     state = 0;
+    countTime = 0;
+    thinkTime = 1;
+    holdTime = 0.5;
+    planetRadius = 40;
 
     planets = new CCArray();
     ships = new CCArray();
@@ -84,7 +99,7 @@ bool HelloWorld::init()
     setTouchEnabled(true);
     setTouchPriority(1);
     setTouchMode(kCCTouchesOneByOne);
-    holdTime = 1;
+
 
     //resourceSize / designSize
     CCDirector::sharedDirector()->setContentScaleFactor(1.0);
@@ -102,10 +117,13 @@ bool HelloWorld::init()
     printf("%f, %f, %f, %f\n", visibleSize.width, visibleSize.height, origin.x, origin.y);
     printf("winSize %f, %f, %f, %f, %f, %f, %f\n", winSize.width, winSize.height, winPixle.width, winPixle.height, contentScalor, visibleSize.width, visibleSize.height);
 
-    
-    Lightning *lightning = Lightning::create(NULL, 100, 10.0, 10.0, 20.0);
-    lightning->midDisplacement(0, 160, 480, 160, 100.0);
-    this->addChild(lightning);
+    CCSprite *sp = CCSprite::create("edge.png");
+    CCTexture2D *tex = sp->getTexture();
+    tex->generateMipmap();
+
+    ccTexParams texParams = { GL_LINEAR_MIPMAP_LINEAR, GL_NEAREST_MIPMAP_LINEAR, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE };    
+    sp->getTexture()->setTexParameters(&texParams);
+
 
     SpaceBack *sb = SpaceBack::create();
     addChild(sb);
@@ -116,6 +134,7 @@ bool HelloWorld::init()
     WelcomeScene *welcome = WelcomeScene::create();
     welcome->logic = this;
     addChild(welcome);
+
     
     return true;
 }
@@ -155,7 +174,7 @@ bool HelloWorld::ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent) {
 
     CCPoint pos = pTouch->getLocation();
     startPlanet = checkInPlanet(pos); 
-    if(startPlanet->color != 0)
+    if(startPlanet != NULL && startPlanet->color != 0)
         startPlanet = NULL;
     if(startPlanet != NULL) {
         transferNum = startPlanet->shipNum/4;
@@ -176,7 +195,10 @@ void HelloWorld::ccTouchMoved(CCTouch *pTouch, CCEvent *pEvent) {
             startPlanet = NULL;
             arrow = NULL;
         } else {
+            Planet *old = endPlanet;
             endPlanet = checkInPlanet(tar);
+            if(old != endPlanet)
+                passTime = 0;
             if(endPlanet != NULL) {
                 tar = endPlanet->getPosition();
             }
@@ -201,6 +223,7 @@ void HelloWorld::ccTouchEnded(CCTouch *pTouch, CCEvent *pEvent) {
     }
     startPlanet = NULL;
     endPlanet = NULL;
+    passTime = 0;
 }
 
 void HelloWorld::sendShip() {
@@ -209,7 +232,7 @@ void HelloWorld::sendShip() {
         startPlanet->sendShip(realTransferNum, endPlanet);
         Ship *ship = Ship::create(); 
         ship->number = realTransferNum;
-        ship->color = startPlanet->color;
+        ship->setColor(startPlanet->color);
         ship->startPlanet = startPlanet;
         ship->endPlanet = endPlanet;
         ship->logic = this;
@@ -220,16 +243,38 @@ void HelloWorld::sendShip() {
         addChild(ship);
     }
 }
+
+void HelloWorld::aiSendShip(Planet *start, Planet *end) {
+    int aiTransferNum = start->shipNum/2;
+    if(aiTransferNum > 0) {
+        start->sendShip(aiTransferNum, end);
+        Ship *ship = Ship::create(); 
+        ship->number = aiTransferNum;
+        ship->setColor(start->color);
+        ship->startPlanet = start;
+        ship->endPlanet = end;
+        ship->logic = this;
+
+        ship->startMove();
+
+        ships->addObject(ship);
+        addChild(ship);
+    }
+}
+
 void HelloWorld::update(float dt) {
     if(startPlanet != NULL && endPlanet != NULL) {
         if(startPlanet->color == 0) {   
+
             if(passTime > holdTime) {
+                CCLog("send shis %f %f", passTime, holdTime);
                 sendShip();
                 passTime -= holdTime;
             }
             passTime += dt;
         }
     }
+    think(dt);
 }
 
 void HelloWorld::onEnter() {
@@ -237,11 +282,86 @@ void HelloWorld::onEnter() {
     scheduleUpdate();
 }
 
+//一方的星球 和 飞船全部消失的时候 就失败了 失败页面 重新弹出新的场景
 void HelloWorld::shipArrive(Ship *ship) {
     ships->removeObject(ship);
     ship->endPlanet->shipArrive(ship);
     ship->removeFromParent();
+    int countRed = 0;
+    int countBlue = 0;
+    int shipRed = 0;
+    int shipBlue = 0;
+    for(unsigned int i = 0; i < planets->count(); i++) {
+        Planet *p = (Planet *)planets->objectAtIndex(i);
+        if(p->color == 0)
+            countRed++;
+        else if(p->color == 1)
+            countBlue++;
+    }
+    for(unsigned int i = 0; i < ships->count(); i++) {
+        Ship *s = (Ship*)ships->objectAtIndex(i);
+        if(s->color == 0)
+            shipRed++;
+        else if(s->color == 1)
+            shipBlue++;
+    }
+    CCLog("red blue %d %d %d %d", countRed, shipRed, countBlue, shipBlue);
+    if(countRed == 0 && shipRed == 0)
+        failNow();
+    else if(countBlue == 0 && shipBlue == 0)
+        winNow();
 }
-void HelloWorld::playNow() {
+void HelloWorld::failNow(){
+    if(state == 1) {
+        state = 2;
+        FailOrWin *fail = FailOrWin::create("你失败了!!");
+        addChild(fail);
+    }
+}
+void HelloWorld::winNow() {
+    if(state == 1) {
+        state = 3;
+        FailOrWin *fail = FailOrWin::create("你胜利了!!");
+        addChild(fail);
+        CCLog("add Fail or Win!");
+    }
+}
+void HelloWorld::playNow(int aiDegree) {
+    if(aiDegree == 0)
+        thinkTime = 2;
+    else if(aiDegree == 1)
+        thinkTime = 0.8;
+    else 
+        thinkTime = 0.5;
+
     state = 1;
+}
+void HelloWorld::think(float dt) {
+    if(state == 1) {
+        if(countTime >= thinkTime) {
+            //two stage initial
+            CCArray *bluePlanets = new CCArray();
+            bluePlanets->init();
+            CCArray *redPlanets = new CCArray();
+            redPlanets->init();
+            for(unsigned int i = 0; i < planets->count(); i++) {
+                Planet *p = (Planet*)planets->objectAtIndex(i);
+                if(p->color == 1) {
+                    bluePlanets->addObject(p);
+                } else {
+                    redPlanets->addObject(p);
+                }
+            }
+            if(bluePlanets->count() > 0 && redPlanets->count() > 0) {
+                int randBlue = random()%bluePlanets->count();
+                int randRed = random()%redPlanets->count();
+                aiSendShip((Planet *)bluePlanets->objectAtIndex(randBlue), (Planet *)redPlanets->objectAtIndex(randRed));                
+            }
+            bluePlanets->release();
+            redPlanets->release();
+
+            countTime -= thinkTime;
+        }
+        countTime += dt;    
+    }
 }

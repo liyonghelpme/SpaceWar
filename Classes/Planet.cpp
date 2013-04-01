@@ -1,12 +1,12 @@
 #include "Planet.h"
 #include "math.h"
-Planet *Planet::create() {
+Planet *Planet::create(float r) {
     Planet *pRet = new Planet();
-    pRet->init();
+    pRet->init(r);
     pRet->autorelease();
     return pRet;
 }
-void Planet::init() {
+void Planet::init(float r) {
     shipNum = 0;
     maxShip = 999;
     productRate = 1;//100ms 生产1只飞船
@@ -19,7 +19,7 @@ void Planet::init() {
     int divideNum = 5;
     float delta = 2*kmPI/divideNum; 
     kmVec3 a, b;
-    radius = 30;
+    radius = r;
     ccColor3B c = {255, 255, 255};
     for(int i = 0; i < divideNum; i++) {
 
@@ -32,7 +32,12 @@ void Planet::init() {
     }
     number = Number::create();
     addChild(number);
-
+    
+    int dir = random()%2;
+    if(dir == 0)
+        dir = -1;
+    float duration = (random()%1000+1000)/1000.;//1-2s
+    back->runAction(CCRepeatForever::create(CCRotateBy::create(duration, dir*360)));
 }
 void Planet::setColor(int c) {
     color = c;

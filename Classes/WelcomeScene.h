@@ -9,6 +9,8 @@ public:
     virtual bool init();
     CREATE_FUNC(WelcomeScene);
     void playNow();
+    void playNow1();
+    void playNow2();
     HelloWorld *logic;
 
     virtual bool ccTouchBegan(CCTouch *pTouch, CCEvent *pEvent);

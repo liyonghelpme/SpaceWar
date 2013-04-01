@@ -58,3 +58,16 @@ void Ship::startMove() {
 
     dir = atan2(dy, dx);
 }
+
+void Ship::setColor(int c) {
+    color = c;
+    CCArray *edge = back->getChildren();
+    for(unsigned int i = 0; i < edge->count(); i++) {
+        if(c == 0)
+            ((CCSprite*)edge->objectAtIndex(i))->setColor(ccc3(255, 0, 0));
+        else if(c == 1)
+            ((CCSprite*)edge->objectAtIndex(i))->setColor(ccc3(0, 0, 255));
+        else if(c == 2)
+            ((CCSprite*)edge->objectAtIndex(i))->setColor(ccc3(128, 128, 128));
+    }
+}

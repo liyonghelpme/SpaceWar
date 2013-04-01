@@ -23,6 +23,7 @@ public:
 
     HelloWorld *logic;
     void startMove();
+    void setColor(int);
 private:
     CCSpriteBatchNode *back;
     float speed;

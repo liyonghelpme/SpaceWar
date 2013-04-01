@@ -12,8 +12,8 @@ class Ship;
 class HelloWorld;
 class Planet : public CCNode {
 public:
-    static Planet *create();
-    void init();
+    static Planet *create(float);
+    void init(float);
     int shipNum;
     int color;
     int productRate;

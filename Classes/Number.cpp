@@ -45,7 +45,7 @@ void Number::singleNum(int v, float offX, float offY) {
     for(int i = 0; showPos[i] != -1; i++) {
         kmVec3Fill(&a, pos[showPos[i]*4]+offX, pos[showPos[i]*4+1]+offY, 0);
         kmVec3Fill(&b, pos[showPos[i]*4+2]+offX, pos[showPos[i]*4+3]+offY, 0);
-        makeLine("edge.png", a, b, 3, c, back);
+        makeLine("edge.png", a, b, 10, c, back);
     }
 }
 void Number::setValue(int v) {
