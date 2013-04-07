@@ -13,6 +13,7 @@ class Ship : public CCNode {
 public:
     static Ship *create();
     void init();
+    int type;
 
     int number;
     int color;

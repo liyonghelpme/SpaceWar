@@ -1,5 +1,7 @@
 #include "Ship.h"
 #include "math.h"
+#include "stdlib.h"
+
 Ship *Ship::create() {
     Ship *pRet = new Ship();
     pRet->init();
@@ -7,21 +9,44 @@ Ship *Ship::create() {
     return pRet;
 }
 void Ship::init() {
+    type = random()%3;
+    type = 0;
+
     back = CCSpriteBatchNode::create("edge.png");
     addChild(back);
     ccBlendFunc blendFunc = {GL_ONE, GL_ONE};
     back->setBlendFunc(blendFunc);
 
-    
     kmVec3 a, b;
     ccColor3B c = {255, 255, 255};
-    kmVec3Fill(&a, 0, 5, 0);
-    kmVec3Fill(&b, -5, -5, 0);
-    makeLine("edge.png", a, b, 10, c, back);
-    kmVec3Fill(&a, 0, 5, 0);
-    kmVec3Fill(&b, 5, -5, 0);
-    makeLine("edge.png", a, b, 10, c, back);
+    if(type == 0) {
+        kmVec3Fill(&a, 0, 5, 0);
+        kmVec3Fill(&b, -5, -5, 0);
+        makeLine("edge.png", a, b, 10, c, back);
+        kmVec3Fill(&a, 0, 5, 0);
+        kmVec3Fill(&b, 5, -5, 0);
+        makeLine("edge.png", a, b, 10, c, back);
+    } else if(type == 1) {
+        kmVec3Fill(&a, -5, 5, 0);
+        kmVec3Fill(&b, -5, -5, 0);
+        makeLine("edge.png", a, b, 10, c, back);
 
+        kmVec3Fill(&a, -5, 5, 0);
+        kmVec3Fill(&b, 5, 5, 0);
+        makeLine("edge.png", a, b, 10, c, back);
+
+        kmVec3Fill(&a, 5, 5, 0);
+        kmVec3Fill(&b, 5, -5, 0);
+        makeLine("edge.png", a, b, 10, c, back);
+
+        kmVec3Fill(&a, -5, -5, 0);
+        kmVec3Fill(&b, 5, -5, 0);
+        makeLine("edge.png", a, b, 10, c, back);
+
+
+    } else {
+    }
+    
     speed = 80;
 }
 void Ship::onEnter() {
