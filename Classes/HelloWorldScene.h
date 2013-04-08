@@ -58,6 +58,7 @@ private:
 
     float countTime;
     float thinkTime;
+    float sendPercent;
     float planetRadius;
     float minPlanetDistance;
 };

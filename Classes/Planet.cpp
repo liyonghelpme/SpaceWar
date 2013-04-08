@@ -1,5 +1,6 @@
 #include "Planet.h"
 #include "math.h"
+#include "shape.h"
 Planet *Planet::create(float r) {
     Planet *pRet = new Planet();
     pRet->init(r);
@@ -28,7 +29,7 @@ void Planet::init(float r) {
 
         CCLog("circle %f %f %f %f", a.x, a.y, b.x, b.y);
         
-        makeLine("edge.png", a, b, 10, c, back);
+        makeLine("edge.png", a, b, 20, c, back);
     }
     number = Number::create();
     addChild(number);
@@ -38,6 +39,10 @@ void Planet::init(float r) {
         dir = -1;
     float duration = (random()%1000+1000)/1000.;//1-2s
     back->runAction(CCRepeatForever::create(CCRotateBy::create(duration, dir*360)));
+}
+void Planet::setType(int t) {
+    type = t;
+    makeShape(type, back); 
 }
 void Planet::setColor(int c) {
     color = c;
@@ -74,15 +79,40 @@ void Planet::sendShip(int num, Planet *end) {
     shipNum -= num;
 
 }
+//0  剪刀
+//1  布
+//2  石头
+
+//1 : 1
+
 void Planet::shipArrive(Ship *ship) {
     if(ship->color == color)
         shipNum += ship->number;
     else {
-        if(shipNum >= ship->number)
-            shipNum -= ship->number;
-        else {
-            shipNum = ship->number-shipNum;
-            setColor(ship->color);
+        if(ship->type == type) {
+            if(shipNum >= ship->number)
+                shipNum -= ship->number;
+            else {
+                shipNum = ship->number-shipNum;
+                setColor(ship->color);
+            }
+        } else {
+            if((ship->type+1)%3 == type) {
+                int shipTempNum = ship->number*2;
+                if(shipNum >= shipTempNum)
+                    shipNum -= shipTempNum;
+                else {
+                    shipNum = (shipTempNum-shipNum)/2;
+                    setColor(ship->color);
+                }
+            } else {
+                if(shipNum >= ship->number)
+                    shipNum -= ship->number;
+                else {
+                    shipNum = ship->number-shipNum;
+                    setColor(ship->color);
+                }
+            }
         }
     }
 }

@@ -13,11 +13,13 @@ class HelloWorld;
 class Planet : public CCNode {
 public:
     static Planet *create(float);
+    int type;
     void init(float);
     int shipNum;
     int color;
     int productRate;
     void setColor(int);
+    void setType(int);
     virtual void onEnter();
     virtual void update(float dt);
     float radius;

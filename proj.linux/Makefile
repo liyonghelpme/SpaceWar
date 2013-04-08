@@ -37,7 +37,8 @@ OBJECTS = ./main.o \
 		../Classes/Number.o \
 		../Classes/Arrow.o \
 		../Classes/WelcomeScene.o \
-		../Classes/FailOrWin.o
+		../Classes/FailOrWin.o \
+		../Classes/shape.o
 
 LBITS := $(shell getconf LONG_BIT)
 ifeq ($(LBITS),64)

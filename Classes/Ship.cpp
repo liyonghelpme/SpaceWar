@@ -1,6 +1,7 @@
 #include "Ship.h"
 #include "math.h"
 #include "stdlib.h"
+#include "shape.h"
 
 Ship *Ship::create() {
     Ship *pRet = new Ship();
@@ -8,44 +9,17 @@ Ship *Ship::create() {
     pRet->autorelease();
     return pRet;
 }
+void Ship::setType(int t) {
+    type = t;
+    makeShape(type, back);
+}
 void Ship::init() {
     type = random()%3;
-    type = 0;
 
     back = CCSpriteBatchNode::create("edge.png");
     addChild(back);
     ccBlendFunc blendFunc = {GL_ONE, GL_ONE};
     back->setBlendFunc(blendFunc);
-
-    kmVec3 a, b;
-    ccColor3B c = {255, 255, 255};
-    if(type == 0) {
-        kmVec3Fill(&a, 0, 5, 0);
-        kmVec3Fill(&b, -5, -5, 0);
-        makeLine("edge.png", a, b, 10, c, back);
-        kmVec3Fill(&a, 0, 5, 0);
-        kmVec3Fill(&b, 5, -5, 0);
-        makeLine("edge.png", a, b, 10, c, back);
-    } else if(type == 1) {
-        kmVec3Fill(&a, -5, 5, 0);
-        kmVec3Fill(&b, -5, -5, 0);
-        makeLine("edge.png", a, b, 10, c, back);
-
-        kmVec3Fill(&a, -5, 5, 0);
-        kmVec3Fill(&b, 5, 5, 0);
-        makeLine("edge.png", a, b, 10, c, back);
-
-        kmVec3Fill(&a, 5, 5, 0);
-        kmVec3Fill(&b, 5, -5, 0);
-        makeLine("edge.png", a, b, 10, c, back);
-
-        kmVec3Fill(&a, -5, -5, 0);
-        kmVec3Fill(&b, 5, -5, 0);
-        makeLine("edge.png", a, b, 10, c, back);
-
-
-    } else {
-    }
     
     speed = 80;
 }
@@ -69,6 +43,7 @@ void Ship::update(float dt) {
 }
 void Ship::startMove() {
     setPosition(startPlanet->getPosition());
+    CCLog("startPosition %f %f", startPlanet->getPosition().x, startPlanet->getPosition().y);
 
     CCPoint start = startPlanet->getPosition();
     CCPoint end = endPlanet->getPosition();
