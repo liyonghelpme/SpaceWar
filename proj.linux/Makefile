@@ -25,19 +25,19 @@ DEFINES = -DLINUX
 
 OBJECTS = ./main.o \
         ../Classes/AppDelegate.o \
-        ../Classes/HelloWorldScene.o \
+        ../Classes/MyScene.o \
         ../Classes/Lightning.o \
-        ../Classes/Bomb.o \
-        ../Classes/Cannon.o \
-        ../Classes/Background.o \
-        ../Classes/Range.o \
-		../Classes/SpaceBack.o \
-		../Classes/Planet.o \
-		../Classes/Ship.o \
-		../Classes/Number.o \
-		../Classes/Arrow.o \
-		../Classes/WelcomeScene.o \
-		../Classes/FailOrWin.o \
+#        ../Classes/Bomb.o \
+#        ../Classes/Cannon.o \
+#        ../Classes/Background.o \
+#        ../Classes/Range.o \
+#		../Classes/SpaceBack.o \
+#		../Classes/Planet.o \
+#		../Classes/Ship.o \
+#		../Classes/Number.o \
+#		../Classes/Arrow.o \
+#		../Classes/WelcomeScene.o \
+#		../Classes/FailOrWin.o \
 		../Classes/shape.o
 
 LBITS := $(shell getconf LONG_BIT)
